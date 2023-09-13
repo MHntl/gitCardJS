@@ -1,0 +1,103 @@
+
+const API_URL = 'https://api.github.com/users/'
+
+const form = document.getElementById("form")
+const search = document.getElementById("search")
+const main = document.querySelector(".main")
+const searchBtn = document.querySelector('#searchBtn')
+
+//---
+async function getuser(username) {
+    try {
+        const { data } = await axios(API_URL + username)
+        console.log(data);
+        createUserCard(data)
+        getRepos(username)
+    } catch (error) {
+        //console.log(error);
+        alert("User couldn't be found.\n" + error)
+        createErrorCard("User couldn't be found")
+    }
+}
+
+//---
+const searchUser = (e) => {
+    e.preventDefault()
+    const user = search.value
+    if (user) {
+        getuser(user)
+        search.value = ""
+    }
+}
+
+//---
+const createUserCard = (user) => {
+    const userName = user.name || user.login
+    const userBio = user.bio ? user.bio : " "
+    const cardHTML = `
+            <div class="card">
+                <img class="user-image" src=${user.avatar_url} alt=${user.name}>
+                    <div class="user-info">
+                        <div class="user-name">
+                            <h2>${userName}</h2>
+                            <small>@${user.login}</small>
+                        </div>
+                    </div>
+                    <p>${userBio}
+                    </p>
+                    <ul>
+                        <li><i class="fa-solid fa-user-group"></i> ${user.followers} <strong>Followers</strong></li>
+                        <li>${user.following}<strong> Following</strong></li>
+                        <li><i class="fa-solid fa-bookmark"></i> ${user.public_repos} <strong>Repositories</strong> </li>
+                    </ul>
+                    <h4>Repositories</h4>
+                    <div class="repos" id="repos">                    
+                    </div>
+            </div>
+            `
+    main.innerHTML = cardHTML
+}
+
+//---
+function createErrorCard(msg) {
+    const cardErrorHTML = `
+    <div class="card">
+    <h2>${msg}</h2>
+    </div>
+    `
+    main.innerHTML = cardErrorHTML
+}
+
+//---
+async function getRepos(username) {
+    try {
+        const { data } = await axios(API_URL + username + "/repos")
+        console.log(data);
+        addReposToCard(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+//---
+function addReposToCard(repos) {
+    const reposElement = document.getElementById("repos")
+    //--
+    repos.slice(0, 5).forEach((repo) => {
+        const reposLink = document.createElement("a")
+        reposLink.href = repo.html_url
+        reposLink.target = "_blank"
+        reposLink.innerHTML = `
+        <i class="fa-solid fa-book-bookmark"></i> ${repo.name}`
+        reposElement.appendChild(reposLink)
+    })
+}
+
+//---
+form.addEventListener("submit", searchUser)
+searchBtn.addEventListener("click", searchUser)
+
+
+
+
+
